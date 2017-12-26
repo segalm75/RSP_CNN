@@ -50,3 +50,5 @@ Temporary Items
 *.png
 *.tiff
 *.tif
+*.h5
+*.json
