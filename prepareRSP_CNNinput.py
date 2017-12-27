@@ -10,6 +10,7 @@
 
 # In[2]:
 
+
 # import neccesary modules for this module
 #-------------------------------------------
 import pandas as pd
@@ -35,10 +36,11 @@ import skimage
 from skimage.io import imsave
 import matplotlib.image as mpimg
 from skimage import io, exposure, img_as_uint, img_as_float
-get_ipython().magic(u'matplotlib inline')
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 # In[3]:
+
 
 ## read netcdf parameters from LUT or measurements files
 ## nc_file is full file path, 
@@ -53,12 +55,8 @@ def read_nc_file( nc_file, varname ):
     return data;
 
 
-# In[ ]:
-
-
-
-
 # In[4]:
+
 
 ## cat netcdf parameters from LUT or measurements files
 ## to create dataframe in pandas, 
@@ -100,12 +98,8 @@ def create_df_from_nc4CNN( nc_data, colname ):
     return df, out;
 
 
-# In[ ]:
-
-
-
-
 # In[5]:
+
 
 ## this function concatanates nc files (with noise) for training purposes
 ## nc_array - a string array with strings for full files path
@@ -140,6 +134,7 @@ def concat_nc_files( nc_array, var_in, var_out):
 
 
 # In[6]:
+
 
 ## cat netcdf parameters from LUT or measurements files
 ## to create dataframe in pandas, 
@@ -176,6 +171,7 @@ def create_df_from_nc( nc_data, colname ):
 
 # In[7]:
 
+
 # process all noise realization into one file (this is test, so not all are here...)
 with_noise_nc_array = ['..//..//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_10_0000_0_90_cut.nc',
             '..//..//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_11_0000_0_90_cut.nc',
@@ -187,6 +183,7 @@ with_noise_nc_array = ['..//..//py_data//oracles_NN//simulated_files//NN_clouds_
 
 
 # In[10]:
+
 
 # create I/Q reflectance image set:
 #----------------------------------
@@ -234,6 +231,7 @@ for f in with_noise_nc_array:
 
 # In[9]:
 
+
 outputPath = 'F://ORACLES_NN//non_norm_images//targets//'
 
 in_aux_vars  = ['azi','sza','cod','sizea','sizeb']
@@ -249,6 +247,7 @@ for inx in range(len(in_aux_vars)):
 
 
 # In[12]:
+
 
 # create I/Q/DOLP reflectance image set:
 #----------------------------------
@@ -322,6 +321,7 @@ for f in with_noise_nc_array:
 
 # In[6]:
 
+
 output_path = 'D://ORACLES_NN//images//ref_i//'
     
 tmp     = read_nc_file( nc_file=with_noise_nc_array[0], varname="ref_i" )
@@ -332,6 +332,7 @@ print with_noise_nc_array[0]
 
 
 # In[17]:
+
 
 # testing other packages without data precision loss
 #----------------------------------------------------
@@ -365,6 +366,7 @@ for i in range(2):#range(dat.shape[2]):
 
 # In[10]:
 
+
 dat_norm = dat
 k = 0
 for i in range(2):#range(dat.shape[2]):
@@ -386,6 +388,7 @@ for i in range(2):#range(dat.shape[2]):
 
 # In[11]:
 
+
 # plot figures and save them
 #fig= plt.figure()
 #plt.plot(range(10))
@@ -399,6 +402,7 @@ for f in with_noise_nc_array:
 
 # In[ ]:
 
+
 # create target variables arrays:
 #---------------------------------
 cod = concat_nc_files4CNN( with_noise_nc_array, "cod",   "COD" )
@@ -410,6 +414,7 @@ print vef.tail()
 
 
 # In[ ]:
+
 
 # upload simulated data for plotting
 #------------------------------------

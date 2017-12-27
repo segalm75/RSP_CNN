@@ -5,6 +5,7 @@
 
 # In[1]:
 
+
 # import neccesary modules for this module
 #-------------------------------------------
 import pandas as pd
@@ -27,10 +28,11 @@ import os, math, sys
 import datetime as dt
 import time as tm
 import csv
-get_ipython().magic(u'matplotlib inline')
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 # In[18]:
+
 
 ## this function reads retrieved ".txt" files from Matlab
 ## given flight date, concatanates various files from same
@@ -60,7 +62,7 @@ def plotRSPtimeseries(data_dir,subdir,f_date,platform):
     from matplotlib.patches import Polygon
     from mpl_toolkits.basemap import Basemap
     import shapefile
-    get_ipython().magic(u'matplotlib inline')
+    get_ipython().run_line_magic('matplotlib', 'inline')
     
     # list all files in folder to plot
     expres = data_dir + subdir + '//' + f_date + "T*lut_scale*.txt"  
@@ -172,6 +174,7 @@ def plotRSPtimeseries(data_dir,subdir,f_date,platform):
 
 # In[4]:
 
+
 # test plotRSPtimeseries(data_dir,f_date):
 #
 #data_dir = '..//..//py_data//oracles_NN//input2NN//predictions//lut9//'
@@ -189,6 +192,7 @@ def plotRSPtimeseries(data_dir,subdir,f_date,platform):
 
 # In[19]:
 
+
 # loop over all campaign dates to get plots
 flight_dates = ['20160910','20160912', '20160914', '20160916','20160918','20160920','20160922', '20160924','20160925', '20160927']
 data_dir = '..//..//py_data//oracles_NN//input2NN//predictions//lut9//'
@@ -198,6 +202,7 @@ for f in range(len(flight_dates)):
 
 
 # In[7]:
+
 
 # loop over all campaign dates to get plots
 #flight_dates = ['20170815','20170817','20170818','20170819']
@@ -213,6 +218,7 @@ for f in range(len(flight_dates)):
 
 
 # In[8]:
+
 
 ## this function reads retrieved ".txt" files from Matlab
 ## given flight date, concatanates various files from same
@@ -244,7 +250,7 @@ def plotRSPlatlon(data_dir,f_date,platform):
     from mpl_toolkits.basemap import Basemap
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     import shapefile
-    get_ipython().magic(u'matplotlib inline')
+    get_ipython().run_line_magic('matplotlib', 'inline')
     
     # list all files in folder to plot
     expres = data_dir + f_date + "T*lut_scale*.txt"  
@@ -368,6 +374,7 @@ def plotRSPlatlon(data_dir,f_date,platform):
 
 # In[10]:
 
+
 ## this function reads retrieved ".txt" files from Matlab
 ## given flight date, concatanates various files from same
 ## day if there are multiple and plots spatial maps of:
@@ -405,7 +412,7 @@ def plotRSPlatlon_winput(data_dir,subdir,f_date,platform,lat_1,lat_2,lat_0,lon_0
     from mpl_toolkits.basemap import Basemap
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     import shapefile
-    get_ipython().magic(u'matplotlib inline')
+    get_ipython().run_line_magic('matplotlib', 'inline')
     
     # list all files in folder to plot
     expres = data_dir + subdir + '//' + f_date + "T*lut_scale*.txt"  
@@ -539,6 +546,7 @@ def plotRSPlatlon_winput(data_dir,subdir,f_date,platform,lat_1,lat_2,lat_0,lon_0
 
 # In[13]:
 
+
 #ORACLES 2016
 #data_dir = '..//..//py_data//oracles_NN//input2NN//predictions//lut9//'
 #plotRSPlatlon(data_dir,"20160927","ER-2")
@@ -568,15 +576,11 @@ plotRSPlatlon_winput(data_dir,"ref_i_ref_q","20170902","P-3",-20.,5.,-10,-5.,300
 
 # In[65]:
 
+
 # loop over all campaign dates to get plots
 flight_dates = ['20160910','20160912', '20160914', '20160922', '20160924', '20160927']
 data_dir = '..//..//py_data//oracles_NN//input2NN//predictions//lut9//'
 
 for f in range(len(flight_dates)):
     plotRSPlatlon(data_dir,flight_dates[f],"ER-2")
-
-
-# In[ ]:
-
-
 

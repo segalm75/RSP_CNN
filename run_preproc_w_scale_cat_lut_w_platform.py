@@ -21,6 +21,7 @@
 
 # In[1]:
 
+
 # import neccesary modules for this module
 #-------------------------------------------
 import pandas as pd
@@ -31,6 +32,7 @@ import netCDF4 as nc4
 
 
 # In[2]:
+
 
 ## read netcdf parameters from LUT or measurements files
 ## nc_file is full file path, 
@@ -46,6 +48,7 @@ def read_nc_file( nc_file, varname ):
 
 
 # In[3]:
+
 
 ## cat netcdf parameters from LUT or measurements files
 ## to create dataframe in pandas, 
@@ -82,6 +85,7 @@ def create_df_from_nc( nc_data, colname ):
 
 # In[4]:
 
+
 # test read_nc_file for training
 filepath = '..//..//py_data//oracles_NN//measurements//RSP2-ER2_L2-RSPCLOUD-Clouds_20160910T073350Z_V002-20170316T192510Z_NN.nc'
 data = read_nc_file( nc_file=filepath, varname="ref_i" )
@@ -89,6 +93,7 @@ data.shape
 
 
 # In[5]:
+
 
 ## cat netcdf parameters from LUT or measurements files
 ## to create dataframe in pandas, 
@@ -129,6 +134,7 @@ def create_df_reduced_from_nc( nc_data, colname ):
 
 # In[6]:
 
+
 # test create_df_from_nc
 ref_i = create_df_reduced_from_nc( data, colname="ref_i")
 ref_i.head()
@@ -137,6 +143,7 @@ ref_i.shape
 
 # In[7]:
 
+
 # test create_df_from_nc
 ref_i = create_df_from_nc( data, colname="ref_i")
 ref_i.head()
@@ -144,6 +151,7 @@ ref_i.shape
 
 
 # In[8]:
+
 
 ## perform PCA on a dataframe using eigen decomposition
 ## inputs are:
@@ -160,7 +168,7 @@ def run_pc( data_df, numPC ):
     # import moduls
     from sklearn.preprocessing import StandardScaler
     import matplotlib.pyplot as plt
-    get_ipython().magic(u'matplotlib inline')
+    get_ipython().run_line_magic('matplotlib', 'inline')
     
     # extract values only from DF
     data = data_df.ix[:,:].values
@@ -236,6 +244,7 @@ def run_pc( data_df, numPC ):
 
 # In[9]:
 
+
 # test read_nc_file for training
 #filepath = '..//..//py_data//oracles_NN/simulated_files//NNcld_20150911_20160102_20160420_nonoise.nc'
 #data1 = read_nc_file( nc_file=filepath, varname="ref_q" )
@@ -255,6 +264,7 @@ def run_pc( data_df, numPC ):
 
 # In[10]:
 
+
 ## perform PCA on a dataframe using PCA
 ## inputs are:
 ## data - data frame of ref_i, ref_q etc
@@ -271,7 +281,7 @@ def run_pca( data_df, numPC ):
     from sklearn.preprocessing import StandardScaler
     import matplotlib.pyplot as plt
     from sklearn.preprocessing import scale
-    get_ipython().magic(u'matplotlib inline')
+    get_ipython().run_line_magic('matplotlib', 'inline')
     
     # extract values only from DF
     data = data_df.ix[:,:].values
@@ -363,6 +373,7 @@ def run_pca( data_df, numPC ):
 
 # In[11]:
 
+
 # test run_pca
 #filepath = '..//..//py_data//oracles_NN/simulated_files//NNcld_20150911_20160102_20160420_nonoise.nc'
 #data = read_nc_file( nc_file=filepath, varname="ref_i" )
@@ -371,6 +382,7 @@ def run_pca( data_df, numPC ):
 
 
 # In[12]:
+
 
 # test read_nc_file for training
 #filepath = '..//..//py_data//oracles_NN//simulated_files//NNcld_20150911_20160102_10_0_90_4PC.nc'
@@ -382,6 +394,7 @@ def run_pca( data_df, numPC ):
 
 # In[13]:
 
+
 # test read_nc_file for training
 #filepath = '..//..//py_data//oracles_NN//simulated_files//NNcld_20150911_20160102_20160420_nonoise.nc'
 #data = read_nc_file( nc_file=filepath, varname="ref_q" )
@@ -391,6 +404,7 @@ def run_pca( data_df, numPC ):
 
 
 # In[14]:
+
 
 # test read_nc_file for training
 #filepath = '..//..//py_data//oracles_NN/simulated_files//NNcld_20150911_20160102_20160420_nonoise.nc'
@@ -411,11 +425,13 @@ def run_pca( data_df, numPC ):
 
 # In[15]:
 
+
 #%%timeit -n 10
 #pca, pca_std = run_pca( ref_i, numPC=30 )
 
 
 # In[16]:
+
 
 ## standartize data frame before applying projection
 ##---------------------------------------------------
@@ -439,6 +455,7 @@ def std_df( data_df ):
 
 # In[17]:
 
+
 # test dolp PC number:
 data  = read_nc_file( nc_file=filepath, varname="ref_i" )
 ref_i = create_df_from_nc( data, colname="ref_i")
@@ -456,10 +473,12 @@ dolp.tail()
 
 # In[18]:
 
+
 #pca, pca_std, std_scale = run_pca( dolp, numPC=100 )
 
 
 # In[19]:
+
 
 ## this function concatanates nc files (with noise) for training purposes
 ## nc_array - a string array with strings for full files path
@@ -494,6 +513,7 @@ def concat_nc_files( nc_array, var_in, var_out):
 
 
 # In[20]:
+
 
 ## this function concatanates nc files (with noise) for training purposes
 ## nc_array - a string array with strings for full files path
@@ -530,6 +550,7 @@ def concat_reduced_nc_files( nc_array, var_in, var_out):
 
 # In[21]:
 
+
 # test concat_nc_files
 nc_array = ['..//..//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_10_0000_0_90_cut.nc',
             '..//..//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_11_0000_0_90_cut.nc',
@@ -540,6 +561,7 @@ dff = concat_nc_files( nc_array, "azi","AZI")
 
 
 # In[21]:
+
 
 ## this function processes simulated RSP data for training purposes
 ## this yields a csv file of projected data (PC's) which is an input
@@ -865,6 +887,7 @@ def run_preproc_w_scale_cat_lut_w_platform( no_noise_nc, with_noise_nc_array, va
 
 
 # In[23]:
+
 
 ## this function processes simulated RSP data for training purposes
 ## this yields a csv file of projected data (PC's) which is an input
@@ -1195,12 +1218,14 @@ def run_preproc_w_scale_cat_lut_reduced_w_platform( no_noise_nc, with_noise_nc_a
 
 # In[24]:
 
+
 # this is training for P3 data (but only no noise)
 nc_array = ['..//..//py_data//oracles_NN//simulated_files//P3//no_noise//NN_clouds_20170627-20170703.nc']
 # no_noise: NN_clouds_20170505_PP_cut_good.nc
 
 
 # In[75]:
+
 
 # test run_preproc for training
 #run_preproc_w_scale_cat_lut_w_platform( no_noise_nc, with_noise_nc_array, var1, numPC1, 
@@ -1213,6 +1238,7 @@ run_preproc_w_scale_cat_lut_reduced_w_platform( '..//..//py_data//oracles_NN//si
 
 
 # In[25]:
+
 
 # test run_preproc for training
 # concatanate several noise realizations 
@@ -1239,6 +1265,7 @@ run_preproc_w_scale_cat_lut_w_platform( '..//..//py_data//oracles_NN//simulated_
 
 # In[22]:
 
+
 # test run_preproc for training
 #run_preproc_w_scale_cat_lut_w_platform( no_noise_nc, with_noise_nc_array, var1, numPC1, 
 #                                outputPath, ro_val, mode, platform, var2=str(), numPC2 = 0)
@@ -1250,6 +1277,7 @@ run_preproc_w_scale_cat_lut_w_platform( '..//..//py_data//oracles_NN//simulated_
 
 
 # In[ ]:
+
 
 # list all files in folder to process for prediction
 import glob
@@ -1285,6 +1313,7 @@ for file in os.listdir(path):
 
 # In[ ]:
 
+
 # list all files in folder to process for prediction - this is ORACLES 2016 ER-2
 import glob
 import os
@@ -1319,6 +1348,7 @@ for file in os.listdir(path):
 
 # In[40]:
 
+
 fl = flist[0]
 run_preproc_w_scale_cat_lut( 'C://Users//msegalro.NDC//WinPython-64bit-2.7.9.5//notebooks//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_cut_good.nc',
              [fl], 
@@ -1326,6 +1356,7 @@ run_preproc_w_scale_cat_lut( 'C://Users//msegalro.NDC//WinPython-64bit-2.7.9.5//
 
 
 # In[23]:
+
 
 # process all files in flist for prediction:
 for f in range(len(flist)):
@@ -1337,13 +1368,9 @@ for f in range(len(flist)):
 
 # In[29]:
 
+
 # test run_preproc for prediction
 run_preproc_w_scale_cat_lut( '..//..//py_data//oracles_NN//simulated_files//NN_clouds_20170505_PP_cut_good.nc',
              ['..//..//py_data//oracles_NN/measurements//RSP2-ER2_L1B-RSPGEOL1B-GeolocatedRadiances_20160927T102159Z_V001-20160927T211209Z_NN.nc'], 
              "ref_i", 5, '..//..//py_data//oracles_NN//input2NN//','090', mode='predict',var2="dolp",numPC2=55)
-
-
-# In[ ]:
-
-
 
