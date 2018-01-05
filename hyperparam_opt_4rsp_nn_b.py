@@ -26,7 +26,7 @@ def data():
     won't reload data for each evaluation run.
     '''
     pre_file = 'D://ORACLES_NN//py_inputs//ER2_x_'
-    var_in   = "ref_i_dolp"
+    var_in   = "ref_i_dolp_orig"
     var_out  = 'D://ORACLES_NN//py_inputs//ER2_y_train_orig.csv'
     x_filename = pre_file + var_in + '.csv'
     X_ = pandas.read_csv(x_filename)
@@ -61,15 +61,17 @@ def model(X_train, Y_train, X_test, Y_test):
     
     model = Sequential()
 
-    model.add(Dropout({{uniform(0, 1)}}, input_shape=X_train.shape[1:], name="drop_input"))
-    model.add(Dense({{choice([256, 512, 1024])}}, activation={{choice(['relu', 'tanh'])}}, name="fc1"))
+    model.add(Dense({{choice([512, 1024])}},  input_shape=X_train.shape[1:], name="fc1"))
+    model.add(Activation({{choice(['relu', 'tanh'])}}))
     model.add(Dropout({{uniform(0, 1)}}, name="drop_fc1"))
-    model.add(Dense({{choice([256, 512, 1024])}}, activation={{choice(['relu', 'tanh'])}}, name="fc2"))
+    model.add(Dense({{choice([512, 1024])}}, name="fc2"))
+    model.add(Activation({{choice(['relu', 'tanh'])}}))
     model.add(Dropout({{uniform(0, 1)}}, name="drop_fc2"))
 
 
     if conditional({{choice(['two', 'three'])}}) == 'three':
-        model.add(Dense({{choice([256, 512, 1024])}}, activation={{choice(['relu', 'tanh'])}}, name="fc3"))
+        model.add(Dense({{choice([512, 1024])}}, name="fc3"))
+        model.add(Activation({{choice(['relu', 'tanh'])}}))
         model.add(Dropout({{uniform(0, 1)}}, name="drop_fc3"))
 
 
@@ -80,18 +82,17 @@ def model(X_train, Y_train, X_test, Y_test):
     
 
          
-    choiceval = {{choice(['adam','rmsprop','sgd'])}}
+    choiceval = {{choice(['adam','sgd'])}}
     if choiceval == 'adam':
-        adam    = Adam(lr={{choice([10**-6, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1])}}, 
-                                decay={{choice([1e-2,1e-3,1e-4])}})
+        adam    = Adam(lr={{choice([10**-5, 10**-4, 10**-3])}})
         optim = adam
     elif choiceval == 'rmsprop':
         rmsprop = RMSprop(lr={{choice([10**-6, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1])}}, 
                                 decay={{choice([1e-2,1e-3,1e-4])}})
         optim = rmsprop
     else:
-        sgd     = SGD(lr={{choice([10**-6, 10**-5, 10**-4, 10**-3, 10**-2, 10**-1])}}, 
-                                decay={{choice([1e-2,1e-3,1e-4])}})
+        sgd     = SGD(lr={{choice([10**-4, 10**-3, 10**-2])}}, 
+                                decay={{choice([1e-2,1e-3])}}, nesterov=True)
 
         optim = sgd
 
@@ -102,7 +103,11 @@ def model(X_train, Y_train, X_test, Y_test):
 
     globalvars.globalVar += 1
 
+    var_in   = "ref_i_dolp_orig"
+
     filepath = "D:/ORACLES_NN/py_outputs/weights_rsp_nn_hyperas" + var_in + str(globalvars.globalVar) + ".hdf5"
+
+    earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=5, verbose=0, mode='auto')
     checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 
     csv_logger = CSVLogger('D:/ORACLES_NN/py_outputs/hyperas_rsp_nn_log_' + var_in + '.csv', 
@@ -116,11 +121,11 @@ def model(X_train, Y_train, X_test, Y_test):
         results = []
 
     history = model.fit(X_train, Y_train,
-              batch_size={{choice([64, 128, 256])}},
-              nb_epoch=3,
+              batch_size={{choice([64, 128, 256, 512])}},
+              nb_epoch=100,
               verbose=2,
               validation_data=(X_test, Y_test),
-              callbacks=[checkpoint,csv_logger,tensor_board])
+              callbacks=[earlystopping,checkpoint,csv_logger,tensor_board])
 
     print(history.history.keys())
     
@@ -193,15 +198,17 @@ def model(X_train, Y_train, X_test, Y_test):
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
  
 if __name__ == '__main__':
+
+    var_in   = "ref_i_dolp_orig"
     trials=Trials()
     best_run, best_model, space = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=3,
+                                          max_evals=300,
                                           trials=trials,
                                           eval_space=True,
                                           return_space=True)
-    X_train, Y_train, X_test, Y_test = data()
+    X_train, X_test, Y_train, Y_test = data()
     print("Evalutation of best performing model:")
     print("Parameters of best run", best_run)
     #real_param_values = eval_hyperopt_space(space, best_run)

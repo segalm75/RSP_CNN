@@ -15,7 +15,7 @@
 # 9. compile and fit
 # 10.test model (evaluate)
 
-# In[25]:
+# In[95]:
 
 
 # import neccesary modules for this module
@@ -39,15 +39,15 @@ from sklearn.preprocessing import MinMaxScaler
 import shapefile
 # keras related libraries
 from keras.models import Sequential # import model
-from keras.layers import Dense, Dropout, Activation, Flatten # import core layers
+from keras.layers import Dense, Dropout, Activation, Flatten, GaussianNoise # import core layers
 from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping, ModelCheckpoint
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.utils import np_utils # import helper funcs
 from keras.regularizers import l2 # import l2 regularizer
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[2]:
+# In[96]:
 
 
 ## read netcdf parameters from LUT or measurements files
@@ -63,7 +63,7 @@ def read_nc_file( nc_file, varname ):
     return data;
 
 
-# In[3]:
+# In[97]:
 
 
 ## cat netcdf parameters from LUT or measurements files
@@ -99,7 +99,7 @@ def create_df_from_nc( nc_data, colname ):
     return df;
 
 
-# In[9]:
+# In[98]:
 
 
 ## standartize data frame before applying projection
@@ -166,7 +166,7 @@ def std_df( data_df ):
     return pd.DataFrame(data_std, columns=data_df.columns)
 
 
-# In[5]:
+# In[99]:
 
 
 # 1. read rsp nc file
@@ -188,7 +188,7 @@ print("ref_shape:",ref_.shape)
 print("vef_shape:",vef_.shape)
 
 
-# In[6]:
+# In[103]:
 
 
 # 2. create DF
@@ -216,12 +216,19 @@ dolp  = (ref_q / ref_i).abs()
 ref_q.rename(columns=lambda x: x.replace("ref_i", 'ref_q'),inplace=True)
 dolp.rename(columns=lambda x: x.replace("ref_i", 'dolp'),inplace=True)
 
+# create ref_q_abs frame
+ref_q_abs = ref_q.abs()
+# renmame columns
+ref_q_abs.rename(columns=lambda x: x.replace("ref_q", 'ref_q_abs'),inplace=True)
 
 # concat DF to form various input combinations
 #df = pd.concat([df, tmp], axis=1)
 print("ref_i_df shape and data: ",ref_i.shape, ref_i.head())
 print("ref_q_df shape and data: ",ref_q.shape, ref_q.head())
 print("dolp_df shape and data: ", dolp.shape, dolp.head())
+print("min azi: " , azi.min(), "max azi: ", azi.max())
+print("azi:", np.unique(azi))
+print("sza:", np.unique(sza))
 
 
 # In[10]:
@@ -281,7 +288,7 @@ file_name = 'D://ORACLES_NN//py_inputs//ER2_x_dolp.csv'
 dolp_x.to_csv(file_name, header=True, index=False)
 
 
-# In[40]:
+# In[84]:
 
 
 # all inputs together:
@@ -290,7 +297,42 @@ file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_i_ref_q_dolp.csv'
 ref_i_ref_q_dolp.to_csv(file_name, header=True, index=False)
 
 
-# In[15]:
+# In[85]:
+
+
+# data -orig - no normalization
+
+ref_i_ref_q = pd.concat([azi, sza, ref_i, ref_q], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_i_ref_q_orig.csv'
+ref_i_ref_q.to_csv(file_name, header=True, index=False)
+
+
+ref_i_dolp = pd.concat([azi, sza, ref_i, dolp], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_i_dolp_orig.csv'
+ref_i_dolp.to_csv(file_name, header=True, index=False)
+
+ref_q_dolp = pd.concat([azi, sza, ref_q, dolp], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_q_dolp_orig.csv'
+ref_q_dolp.to_csv(file_name, header=True, index=False)
+
+ref_i_x = pd.concat([azi, sza, ref_i], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_i_orig.csv'
+ref_i_x.to_csv(file_name, header=True, index=False)
+
+ref_q_x = pd.concat([azi, sza, ref_q], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_q_orig.csv'
+ref_q_x.to_csv(file_name, header=True, index=False)
+
+dolp_x = pd.concat([azi, sza, dolp], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_dolp_orig.csv'
+dolp_x.to_csv(file_name, header=True, index=False)
+
+ref_i_ref_q_dolp = pd.concat([azi, sza, ref_i, ref_q, dolp], axis=1)
+file_name = 'D://ORACLES_NN//py_inputs//ER2_x_ref_i_ref_q_dolp_orig.csv'
+ref_i_ref_q_dolp.to_csv(file_name, header=True, index=False)
+
+
+# In[73]:
 
 
 # 6. + 7. split train/test
@@ -306,10 +348,14 @@ for f in range(len(var_in)):
     
     # import x
     x_filename = 'D://ORACLES_NN//py_inputs//ER2_x_' + var_in[f] + '.csv'
-    X = pd.read_csv(x_filename)
+    X_ = pd.read_csv(x_filename)
     #print(X.head())
     #import y
-    y = pd.read_csv('D://ORACLES_NN//py_inputs//ER2_y_train_orig.csv')
+    y_ = pd.read_csv('D://ORACLES_NN//py_inputs//ER2_y_train_orig.csv')
+    
+    X = X_.iloc[:,:].values
+    y = y_.iloc[:,:].values
+    
     #print(y.head())
     # import train/validation data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42,shuffle=True)
@@ -325,7 +371,7 @@ for f in range(len(var_in)):
     print("y_train_sample",y_train[0:5])
 
 
-# In[20]:
+# In[74]:
 
 
 # 8. build model
@@ -344,7 +390,7 @@ model.add(Dense(y_test.shape[1], activation='linear',name='out_linear'))
 model.summary()
 
 
-# In[36]:
+# In[76]:
 
 
 # 8. + 9. compile and fit
@@ -379,23 +425,32 @@ csv_logger  = CSVLogger('D://ORACLES_NN//py_outputs//ER2_model_log.csv',
 X_train = X_train.astype('float32')
 X_test  = X_test.astype('float32')
 #print(X_train.head())
-model.fit(x = np.array(X_train), y=np.array(y_train),
-          epochs=2, batch_size=32,verbose=1,validation_split=0.15, 
+model.fit(x = X_train, y=y_train,
+          epochs=2, batch_size=128,verbose=1,validation_split=0.15, 
           callbacks = [earlystopping,checkpointer,csv_logger])
 
 
-# In[37]:
+# In[77]:
+
+
+#print("type:",type(X_test))
+#print(X_test.iloc[0:5,0:5])
+#print("type:",type(np.asarray(X_test)))
+#print(np.asarray(X_test[0:5,0:5]))
+
+
+# In[78]:
 
 
 # 10. model evaluate
 #-------------------
-score, acc = model.evaluate(np.array(X_test), np.array(y_test), batch_size=32)
+score, acc = model.evaluate(X_test, y_test, batch_size=128)
 print("score is: ", score, "accuracy is: ", acc)
 
 
 # ## 11. this step is to run all model options
 
-# In[42]:
+# In[152]:
 
 
 # this function splits train/test sets from data for each of the input variables
@@ -414,10 +469,14 @@ def split_data(pre_file, var_in, var_out):
     
     # import x
     x_filename = pre_file + var_in + '.csv'
-    X = pd.read_csv(x_filename)
+    X_ = pd.read_csv(x_filename)
     #print(X.head())
     #import y
-    y = pd.read_csv(var_out)
+    y_ = pd.read_csv(var_out)
+    
+    X = X_.iloc[:,:].values
+    y = y_.iloc[:,:].values
+    
     #print(y.head())
     # import train/validation data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42,shuffle=True)
@@ -439,10 +498,10 @@ def split_data(pre_file, var_in, var_out):
     y_test  = y_test.astype('float32')
     
     
-    return np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
+    return X_train, X_test, y_train, y_test
 
 
-# In[43]:
+# In[157]:
 
 
 # this function defines the model to run
@@ -455,13 +514,25 @@ def model(input_shape, output_shape):
 
     model = Sequential()
 
-    model.add(Dropout(0.50, input_shape=input_shape, name="drop_input"))
-    model.add(Dense(1024, activation='relu', name="fc1"))
-    model.add(Dropout(0.50, name="drop_fc1"))
-    model.add(Dense(1024, activation='relu', name="fc2"))
-    model.add(Dropout(0.50, name="drop_fc2"))
-    model.add(Dense(1024, activation='relu', name="fc3"))
-    model.add(Dropout(0.50, name="drop_fc3"))
+    #model.add(Dropout(0.25, input_shape=input_shape, name="drop_input"))
+    model.add(GaussianNoise(0.01, input_shape=input_shape))
+    #model.add(Dense(4664, activation='relu', name="fc0"))
+    model.add(Dense(2832, activation='relu', name="fc1"))
+    #model.add(Dropout(0.25, name="drop_fc1"))
+    model.add(Dense(2832, activation='relu', name="fc2"))
+    #model.add(Dropout(0.25, name="drop_fc2"))
+    model.add(Dense(1416, activation='relu', name="fc3"))
+    model.add(Dense(1416, activation='relu', name="fc4"))
+    model.add(Dense(708, activation='relu', name="fc5"))
+    model.add(Dense(708, activation='relu', name="fc6"))
+    model.add(Dense(708, activation='relu', name="fc7"))
+    model.add(Dense(708, activation='relu', name="fc8"))
+    model.add(Dense(354, activation='relu', name="fc9"))
+    model.add(Dense(354, activation='relu', name="fc10"))
+    model.add(Dense(354, activation='relu', name="fc11"))
+    model.add(Dense(354, activation='relu', name="fc12"))
+    
+    #model.add(Dropout(0.25, name="drop_fc4"))
     model.add(Dense(output_shape, activation='linear',name='out_linear'))
 
     model.summary()
@@ -469,7 +540,7 @@ def model(input_shape, output_shape):
     return model
 
 
-# In[56]:
+# In[158]:
 
 
 # this function runs the model (compile, fit, and evaluate on test)
@@ -482,18 +553,25 @@ def model(input_shape, output_shape):
 # X_train, X_test, y_train, y_test are outputs from split_data()
 #
 
-def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.0001, decay=1e-3):
+def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test, optimizer = "adam", lr=0.0001, decay=0):
     
     import numpy
     
     # optimizer
-    adam = Adam(lr=lr,decay=decay)
-    model.compile(loss='mean_squared_error', 
-                  optimizer=adam,
-                  metrics=['accuracy'])
-    
+    if optimizer == "adam":
+        adam = Adam(lr=lr,decay=decay)
+        model.compile(loss='mean_squared_error', 
+                      optimizer=adam,
+                      metrics=['accuracy'])
+    elif optimizer == "sgd":
+        sgd = SGD(lr=lr, decay=decay, momentum=0.90, nesterov=False)
+        model.compile(loss='mean_squared_error', 
+                      optimizer=sgd,
+                      metrics=['accuracy'])
+        
+
     # early stopping conditions:
-    earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=5, verbose=0, mode='auto')
+    earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=5, verbose=0, mode='auto')
     # saving best model params
     checkpointer = ModelCheckpoint(filepath="D://ORACLES_NN//py_outputs//" + file_str + var_in + "_model_weights.hdf5", 
                                    verbose=0, 
@@ -501,10 +579,10 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     csv_logger  = CSVLogger("D://ORACLES_NN//py_outputs//" + file_str + var_in + "_model_log.csv", 
                                        append=True, separator=';')
 
-    callbacks = [earlystopping,checkpointer,csv_logger]
+    callbacks = [checkpointer,csv_logger]
 
     history = model.fit(x = X_train, y=y_train,
-              epochs=30, batch_size=64,verbose=1,validation_split=0.15, 
+              epochs=150, batch_size=128,verbose=1,validation_split=0.15, 
               callbacks = callbacks)
     
     h1   = history.history
@@ -513,7 +591,7 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     val_loss_ = numpy.asarray(h1['val_loss'])
     val_acc_  = numpy.asarray(h1['val_acc'])
     
-    opt        = "Adam"
+    opt        = optimizer
     lr         = lr
     decay      = decay
 
@@ -521,7 +599,7 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     acc_plot = "D://ORACLES_NN//py_plots//" + file_str + "_accuracy_run_" + var_in + ".png"
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
-    plt.title('run: ' + var_in + " opt: " + opt + " lr: " + str(lr) + " decay: " + str(decay))
+    plt.title('run: ' + var_in + " opt: " + str(opt) + " lr: " + str(lr) + " decay: " + str(decay))
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
@@ -531,7 +609,7 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     los_plot = "D://ORACLES_NN//py_plots//" + file_str + "_losses_run_" + var_in + ".png"
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
-    plt.title('run: ' + var_in + " opt: " + opt + " lr: " + str(lr) + " decay: " + str(decay))
+    plt.title('run: ' + var_in + " opt: " + str(opt) + " lr: " + str(lr) + " decay: " + str(decay))
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
@@ -544,7 +622,7 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     with open(save_file_mlp, 'w') as f:
             numpy.savetxt(save_file_mlp, acc_and_loss, delimiter=",")
 
-    score, acc = model.evaluate(X_test, y_test, batch_size=64, verbose=0)
+    score, acc = model.evaluate(X_test, y_test, batch_size=128, verbose=0)
     print("parameters for run " + var_in + ":")
     print("-------------------------------")
 
@@ -562,10 +640,10 @@ def run_model(model, var_in, file_str, X_train, X_test, y_train, y_test,lr=0.000
     DAT =  numpy.column_stack((rownames, rowvals))
     numpy.savetxt(save_file_params, DAT, delimiter=",",fmt="%s")
 
-    return
+    return model
 
 
-# In[57]:
+# In[159]:
 
 
 # test input combinations
@@ -579,15 +657,133 @@ for f in range(len(var_in)):
     # split train/test
     X_train, X_test, y_train, y_test = split_data('D://ORACLES_NN//py_inputs//ER2_x_', 
                                                   var_in[f], 
-                                                  var_out = 'D://ORACLES_NN//py_inputs//ER2_y_train_orig.csv')
+                                                  var_out = 'D://ORACLES_NN//py_inputs//ER2_y_train_norm.csv')
+    print("input_shape:",X_train.shape[1:])
+    print("output_shape: ",y_test.shape[1])
     # build model
     rsp_nn_model = model(input_shape = X_train.shape[1:], 
                          output_shape = y_test.shape[1])
     
     # run and validate model
-    run_model(rsp_nn_model, 
-              var_in[f], "ER2", X_train, X_test, y_train, y_test)
+    model = run_model(rsp_nn_model, 
+              var_in[f], "ER2", X_train, X_test, y_train, y_test, optimizer = "sgd", lr=0.15, decay=1e-2)
     
 
 
+# In[149]:
+
+
+# generate prediction plots
+prediction = model.predict(X_test)
+
+vars = ['COD', 'Reff', 'Veff']
+# plot prediction per variable
+
+for f in range(len(vars)):
+    
+    plt.plot(y_test[:,f],prediction[:,f],'.b')
+    plt.ylabel('predicted ' + vars[f])
+    plt.xlabel('original ' +  vars[f])
+    plt.axis([min(y_test[:,f]),max(y_test[:,f]),min(y_test[:,f]),max(y_test[:,f])])
+    plotname = "D://ORACLES_NN//py_plots//" + '12 layers w noise for opt adam, ' + " batch_size_" + str(128) + '_' + vars[f] + ".png"
+    plt.title('12 layers w noise, ' + " for opt:adam, batch_size: " + str(128) + " lr: " + str(0.001) + " decay: " + str(0))
+    plt.savefig(plotname)     
+    
+    plt.show()
+
+
+# ## predict on RSP measurements
+# ##############################################
+
 # ## 12. this step is to run hyperas hyperparameterization optimization on the best model inputs
+
+# In[ ]:
+
+
+# save model
+    #-------------
+    model_name = 'KerasFC_image_size_' + str(image_size[im])
+    
+    # serialize model to JSON
+    model_json = model.to_json()
+    with open(model_name + '.json', "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights(model_name + '.h5')
+    print(model_name, " model saved to disk")
+    # load model:
+    model_name = 'KerasFC_image_size_' + str(im_size)
+    # load json and create model
+    json_file = open(model_name + '.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights(model_name + ".h5")
+    print("Loaded model from disk")
+    model = loaded_model
+    
+    # predict image line by line
+    whole_predict = []
+    offstart = 0
+    crop_len = int(np.floor(im_size/2))
+    num_lines = Transect1_truth.shape[0] - 2*crop_len
+    for offset in range(offstart,offstart+num_lines):
+        if (offset % 1000 == 0):
+            print('Now on step %d ', offset)
+        temp_dataset, temp_labelset = load_whole_data(Transect1, Transect1_truth, image_size=im_size, offset = offset, lines=1, toremove=3)
+        
+        temp_predict = model.predict_on_batch(temp_dataset)
+        
+        whole_predict.append(classifyback(temp_predict))
+        
+
+    whole_predict = np.asarray(whole_predict)
+    print(whole_predict.shape)
+    
+    # calculate accuracy
+    #--------------------
+
+    truth_predict = Transect1_truth[crop_len+offstart:crop_len+offstart+num_lines, crop_len:Transect1_truth.shape[1]-crop_len]
+    
+    y_true = truth_predict.ravel()
+    y_pred = whole_predict.ravel()
+    
+    # overall accuracy
+    overall_accuracy = 100*accuracy_score(y_true, y_pred)
+    print('Final Accuracy (overall) for image_size %i is %.1f%%' % (im_size,overall_accuracy))
+    # weighted accuracy
+    w = np.ones(y_true.shape[0])
+    for idx, i in enumerate(np.bincount(y_true)):
+        w[y_true == idx] *= (i/float(y_true.shape[0]))
+    w_accuracy = 100*accuracy_score(y_true, y_pred, sample_weight=w)
+    print('Final Accuracy (weighted) %.1f%%' % (w_accuracy))
+    # per class accuracy
+    num_labels = len(np.unique(truth_predict))
+    #0  # Sand
+    #1  # Branching
+    #2  # Mounding
+    #3  # Rock
+    class_labels = ('Sand','Branching','Mounding','Rock')
+    for i in range(num_labels):
+        true = y_true[y_true==i]
+        pred = y_pred[y_true==i]
+        accuracy = 100*accuracy_score(true, pred)
+        print('Accuracy for class %i (%s) is %.1f%%' % (i,class_labels[i], accuracy))
+        
+    # plot prediction
+    #-----------------
+    
+    plt.figure()
+    plt.subplot(1,2,1)
+    plt.imshow(whole_predict)
+    plt.title("prediction")
+    # plt.axis('off')
+    plt.subplot(1,2,2)
+    plt.imshow(truth_predict)
+    plt.title("truth")
+    # plt.axis('off')
+    plt.show()
+    plt_name = "whole_predict_fc_image_size_" + str(im_size) + ".png"
+    plt.savefig(plt_name,bbox_inches = 'tight',dpi=1000)
+
