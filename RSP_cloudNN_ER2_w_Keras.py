@@ -501,7 +501,7 @@ def split_data(pre_file, var_in, var_out):
     return X_train, X_test, y_train, y_test
 
 
-# In[157]:
+# In[160]:
 
 
 # this function defines the model to run
@@ -540,7 +540,7 @@ def model(input_shape, output_shape):
     return model
 
 
-# In[158]:
+# In[161]:
 
 
 # this function runs the model (compile, fit, and evaluate on test)
